@@ -26,8 +26,9 @@ namespace PodcastStats
                 DurationStyle.secondsDuration);
             var output7 = GetPodcastInfo("https://www.giantbomb.com/podcast-xml/all-systems-goku", "All Systems Goku",
                 DurationStyle.secondsDuration);
-            
-            var output8 = GetPodcastInfo("https://www.giantbomb.com/podcast-xml/bombcast-aftermath/", "Bombcast Aftermath",
+
+            var output8 = GetPodcastInfo("https://www.giantbomb.com/podcast-xml/bombcast-aftermath/",
+                "Bombcast Aftermath",
                 DurationStyle.secondsDuration);
 
 
@@ -37,8 +38,8 @@ namespace PodcastStats
             gb.AddRange(output6);
             gb.AddRange(output7);
             gb.AddRange(output8);
-            
-            
+
+
             var outputs = new List<PodcastStatInfo>();
             outputs.AddRange(output);
             outputs.AddRange(output2);
@@ -51,6 +52,12 @@ namespace PodcastStats
             foreach (var dt in dataText) Console.WriteLine(dt);
         }
 
+        /// <summary>
+        ///     Combines the data from several podcasts and aggregates the dates to spit out a format that's easy to plot in a
+        ///     scatter graph
+        /// </summary>
+        /// <param name="outputs">List of combined podcast data</param>
+        /// <returns>List of data lines, comma separated</returns>
         private static IEnumerable<string> AggregateDataForPlot(List<PodcastStatInfo> outputs)
         {
             var allDates = outputs.Select(e => e.PublishDate).Distinct().ToList();
@@ -95,7 +102,7 @@ namespace PodcastStats
 
         private static List<PodcastStatInfo> GetPodcastInfo(string url, string podcastName, DurationStyle durationStyle)
         {
-            var output2 = new List<PodcastStatInfo>();
+            var podcastStatInfoList = new List<PodcastStatInfo>();
 
             var reader = XmlReader.Create(url);
             var feed = SyndicationFeed.Load(reader);
@@ -107,45 +114,55 @@ namespace PodcastStats
             {
                 var durationStr = "";
 
-
                 var durationEls =
                     item.ElementExtensions.ReadElementExtensions<XmlElement>("duration",
                         "http://www.itunes.com/dtds/podcast-1.0.dtd");
 
-                if (durationEls.Count > 0)
+                if (durationEls.Count <= 0)
                 {
-                    var durationEl =
-                        durationEls[0];
-
-
-                    if (durationEl == null || durationEl.InnerText == "0:00" || durationEl.InnerText == "" ||
-                        durationEl.InnerText == "0")
-                    {
-                        continue;
-                    }
-
-                    durationStr = durationEl.InnerText;
-
-                    durationStr = FormatDuration(durationStyle, durationStr);
-
-                    if (durationStr == "")
-                    {
-                        continue;
-                    }
-
-                    var psi = new PodcastStatInfo();
-                    psi.Duration = durationStr;
-                    psi.PublishDate = item.PublishDate.Date;
-                    psi.Title = item.Title.Text;
-                    psi.Id = item.Id;
-                    psi.Podcast = podcastName;
-                    output2.Add(psi);
+                    continue;
                 }
+
+                var durationEl = durationEls[0];
+
+
+                if (durationEl == null || durationEl.InnerText == "0:00" || durationEl.InnerText == "" ||
+                    durationEl.InnerText == "0")
+                {
+                    continue;
+                }
+
+                durationStr = durationEl.InnerText;
+
+                durationStr = FormatDuration(durationStyle, durationStr);
+
+                if (durationStr == "")
+                {
+                    continue;
+                }
+
+                var psi = new PodcastStatInfo
+                {
+                    Duration = durationStr,
+                    PublishDate = item.PublishDate.Date,
+                    Title = item.Title.Text,
+                    Id = item.Id,
+                    Podcast = podcastName
+                };
+                
+                podcastStatInfoList.Add(psi);
             }
 
-            return output2;
+            return podcastStatInfoList;
         }
 
+        /// <summary>
+        ///     The content in the 'duration' tag is frustratingly inconsistent. This handles the various formats I've seen and
+        ///     spits out a consistent output in hh:mm:ss format.
+        /// </summary>
+        /// <param name="durationStyle">Duration style</param>
+        /// <param name="durationStr">Input string</param>
+        /// <returns>Formatted output in hh:mm:ss</returns>
         private static string FormatDuration(DurationStyle durationStyle, string durationStr)
         {
             switch (durationStyle)
@@ -244,6 +261,8 @@ namespace PodcastStats
 
                     return str;
                 }
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(durationStyle), durationStyle, null);
             }
 
             return durationStr;
