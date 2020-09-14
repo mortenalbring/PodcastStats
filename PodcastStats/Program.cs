@@ -4,67 +4,98 @@ using System.Linq;
 using System.ServiceModel.Syndication;
 using System.Xml;
 
-
 namespace PodcastStats
 {
     internal class Program
     {
-
-        private class PodcastStatInfo
-        {
-            public string Id { get; set; }
-            public DateTimeOffset PublishDate { get; set; }
-            
-            public string Duration { get; set; }
-            
-            public string Title { get; set; }
-            
-            public string Podcast { get; set; }
-
-            public string MakeStatLine()
-            {
-                return PublishDate.Date + "," + Duration + "," + Id + "," + Title;
-            }
-        }
-        
         public static void Main(string[] args)
         {
-            
-            string url = "https://feeds.99percentinvisible.org/";
-            XmlReader reader = XmlReader.Create(url);
-            SyndicationFeed feed = SyndicationFeed.Load(reader);
-            reader.Close();
-            Console.WriteLine(feed.Items.Count());
-            var output2 = new List<PodcastStatInfo>();
-            
-            foreach (SyndicationItem item in feed.Items)
-            {
-                var durationStr = "";
-                
-                var durationEl = item.ElementExtensions.ReadElementExtensions<XmlElement>("duration", "http://www.itunes.com/dtds/podcast-1.0.dtd")[0];
-
-                if (durationEl != null && durationEl.InnerText != "0:00")
-                {
-                    durationStr = durationEl.InnerText;
-                    
-                    var psi = new PodcastStatInfo();
-                    psi.Duration = durationStr;
-                    psi.PublishDate = item.PublishDate;
-                    psi.Title = item.Title.Text;
-                    psi.Id = item.Id;
-                    psi.Podcast = "99% Invisible";
-                    output2.Add(psi);
-                }
-            }
+            //      var output = GetPodcastInfo("https://feeds.99percentinvisible.org/","99% Invisible", false);
+            var output2 = GetPodcastInfo("https://www.giantbomb.com/feeds/podcast/", "Giant Bombcast", true);
 
             // foreach (var d in output)
             // {
             //     Console.WriteLine(d.Key.Date + ","  + d.Value);
             // }
 
-            foreach (var d in output2)
+            foreach (var d in output2) Console.WriteLine(d.MakeSimpleStatLine());
+        }
+
+        private static List<PodcastStatInfo> GetPodcastInfo(string url, string podcastName, bool reformatTime)
+        {
+            var output2 = new List<PodcastStatInfo>();
+
+            var reader = XmlReader.Create(url);
+            var feed = SyndicationFeed.Load(reader);
+            reader.Close();
+            Console.WriteLine(feed.Items.Count());
+
+
+            foreach (var item in feed.Items)
             {
-                Console.WriteLine(d.MakeStatLine());
+                var durationStr = "";
+
+                var durationEl =
+                    item.ElementExtensions.ReadElementExtensions<XmlElement>("duration",
+                        "http://www.itunes.com/dtds/podcast-1.0.dtd")[0];
+
+                if (durationEl != null && durationEl.InnerText != "0:00" && durationEl.InnerText != "" &&
+                    durationEl.InnerText != "0")
+                {
+                    durationStr = durationEl.InnerText;
+
+                    if (reformatTime)
+                    {
+                        int durInt;
+                        var durSuccess = int.TryParse(durationStr, out durInt);
+                        if (durSuccess)
+                        {
+                            var times = TimeSpan.FromSeconds(durInt);
+
+                            var str = times.ToString(@"hh\:mm\:ss");
+                            durationStr = str;
+                        }
+                        else
+                        {
+                            durationStr = "";
+                        }
+                    }
+
+                    if (durationStr != "")
+                    {
+                        var psi = new PodcastStatInfo();
+                        psi.Duration = durationStr;
+                        psi.PublishDate = item.PublishDate;
+                        psi.Title = item.Title.Text;
+                        psi.Id = item.Id;
+                        psi.Podcast = podcastName;
+                        output2.Add(psi);
+                    }
+                }
+            }
+
+            return output2;
+        }
+
+        private class PodcastStatInfo
+        {
+            public string Id { get; set; }
+            public DateTimeOffset PublishDate { get; set; }
+
+            public string Duration { get; set; }
+
+            public string Title { get; set; }
+
+            public string Podcast { get; set; }
+
+            public string MakeStatLine()
+            {
+                return PublishDate.Date + "," + Duration + "," + Id + "," + Title;
+            }
+
+            public string MakeSimpleStatLine()
+            {
+                return PublishDate.Date + "," + Duration;
             }
         }
     }
