@@ -9,6 +9,24 @@ namespace PodcastStats
 {
     internal class Program
     {
+
+        private class PodcastStatInfo
+        {
+            public string Id { get; set; }
+            public DateTimeOffset PublishDate { get; set; }
+            
+            public string Duration { get; set; }
+            
+            public string Title { get; set; }
+            
+            public string Podcast { get; set; }
+
+            public string MakeStatLine()
+            {
+                return PublishDate.Date + "," + Duration + "," + Id + "," + Title;
+            }
+        }
+        
         public static void Main(string[] args)
         {
             
@@ -17,28 +35,36 @@ namespace PodcastStats
             SyndicationFeed feed = SyndicationFeed.Load(reader);
             reader.Close();
             Console.WriteLine(feed.Items.Count());
-            var output = new Dictionary<DateTimeOffset, string>();
+            var output2 = new List<PodcastStatInfo>();
             
             foreach (SyndicationItem item in feed.Items)
             {
-                var publishDate = item.PublishDate;
                 var durationStr = "";
                 
                 var durationEl = item.ElementExtensions.ReadElementExtensions<XmlElement>("duration", "http://www.itunes.com/dtds/podcast-1.0.dtd")[0];
 
-                if (durationEl != null)
+                if (durationEl != null && durationEl.InnerText != "0:00")
                 {
                     durationStr = durationEl.InnerText;
                     
-                    output.Add(item.PublishDate, durationStr);
+                    var psi = new PodcastStatInfo();
+                    psi.Duration = durationStr;
+                    psi.PublishDate = item.PublishDate;
+                    psi.Title = item.Title.Text;
+                    psi.Id = item.Id;
+                    psi.Podcast = "99% Invisible";
+                    output2.Add(psi);
                 }
-                String subject = item.Title.Text;    
-                String summary = item.Summary.Text;
             }
 
-            foreach (var d in output)
+            // foreach (var d in output)
+            // {
+            //     Console.WriteLine(d.Key.Date + ","  + d.Value);
+            // }
+
+            foreach (var d in output2)
             {
-                Console.WriteLine(d.Key.Date + ","  + d.Value);
+                Console.WriteLine(d.MakeStatLine());
             }
         }
     }
