@@ -18,6 +18,11 @@ namespace PodcastStats
                 DurationStyle.secondsDuration);
             var output3 = GetPodcastInfo("https://www.giantbomb.com/podcast-xml/beastcast/", "Giant Beastcast",
                 DurationStyle.secondsDuration);
+            
+            var output4 = GetPodcastInfo("https://feeds.megaphone.fm/replyall", "Reply All",
+                DurationStyle.secondsDuration);
+
+             
 
 
             var outputs = new List<PodcastStatInfo>();
@@ -25,6 +30,7 @@ namespace PodcastStats
             outputs.AddRange(output2);
             outputs.AddRange(output3);
             outputs.AddRange(output0);
+            outputs.AddRange(output4);
 
             var allDates = outputs.Select(e => e.PublishDate).Distinct().ToList();
             var podcastTypes = outputs.Select(e => e.Podcast).Distinct().ToList();
