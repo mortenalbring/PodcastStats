@@ -22,7 +22,23 @@ namespace PodcastStats
             var output5 = GetPodcastInfo("http://joeroganexp.joerogan.libsynpro.com/rss", "Joe Rogan Experience",
                 DurationStyle.hhmmssMixed);
 
+            var output6 = GetPodcastInfo("https://www.giantbomb.com/podcast-xml/altf1/", "ALT F1",
+                DurationStyle.secondsDuration);
+            var output7 = GetPodcastInfo("https://www.giantbomb.com/podcast-xml/all-systems-goku", "All Systems Goku",
+                DurationStyle.secondsDuration);
+            
+            var output8 = GetPodcastInfo("https://www.giantbomb.com/podcast-xml/bombcast-aftermath/", "Bombcast Aftermath",
+                DurationStyle.secondsDuration);
 
+
+            var gb = new List<PodcastStatInfo>();
+            gb.AddRange(output2);
+            gb.AddRange(output3);
+            gb.AddRange(output6);
+            gb.AddRange(output7);
+            gb.AddRange(output8);
+            
+            
             var outputs = new List<PodcastStatInfo>();
             outputs.AddRange(output);
             outputs.AddRange(output2);
@@ -30,7 +46,7 @@ namespace PodcastStats
             outputs.AddRange(output4);
             outputs.AddRange(output5);
 
-            var dataText = AggregateDataForPlot(outputs);
+            var dataText = AggregateDataForPlot(gb);
 
             foreach (var dt in dataText) Console.WriteLine(dt);
         }
