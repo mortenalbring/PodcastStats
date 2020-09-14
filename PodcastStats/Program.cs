@@ -10,37 +10,39 @@ namespace PodcastStats
     {
         public static void Main(string[] args)
         {
-            var output0 = GetPodcastInfo("http://joeroganexp.joerogan.libsynpro.com/rss", "Joe Rogan Experience",
-                DurationStyle.hhmmssMixed);
-
             var output = GetPodcastInfo("https://feeds.99percentinvisible.org/", "99% Invisible", DurationStyle.mmss);
             var output2 = GetPodcastInfo("https://www.giantbomb.com/feeds/podcast/", "Giant Bombcast",
                 DurationStyle.secondsDuration);
             var output3 = GetPodcastInfo("https://www.giantbomb.com/podcast-xml/beastcast/", "Giant Beastcast",
                 DurationStyle.secondsDuration);
-            
+
             var output4 = GetPodcastInfo("https://feeds.megaphone.fm/replyall", "Reply All",
                 DurationStyle.secondsDuration);
 
-             
+            var output5 = GetPodcastInfo("http://joeroganexp.joerogan.libsynpro.com/rss", "Joe Rogan Experience",
+                DurationStyle.hhmmssMixed);
 
 
             var outputs = new List<PodcastStatInfo>();
             outputs.AddRange(output);
             outputs.AddRange(output2);
             outputs.AddRange(output3);
-            outputs.AddRange(output0);
             outputs.AddRange(output4);
+            outputs.AddRange(output5);
 
+            var dataText = AggregateDataForPlot(outputs);
+
+            foreach (var dt in dataText) Console.WriteLine(dt);
+        }
+
+        private static IEnumerable<string> AggregateDataForPlot(List<PodcastStatInfo> outputs)
+        {
             var allDates = outputs.Select(e => e.PublishDate).Distinct().ToList();
             var podcastTypes = outputs.Select(e => e.Podcast).Distinct().ToList();
 
-            var header = "Date,";
+            var header = podcastTypes.Aggregate("Date,", (current, p) => current + p + ",");
 
-            foreach (var p in podcastTypes) header = header + p + ",";
-
-            var dataText = new List<string>();
-            dataText.Add(header);
+            var dataText = new List<string> {header};
             foreach (var d in allDates)
             {
                 var outputStr = d.ToString("yyyy/MM/dd");
@@ -71,7 +73,8 @@ namespace PodcastStats
                 dataText.Add(outputStr);
             }
 
-            foreach (var dt in dataText) Console.WriteLine(dt);
+
+            return dataText;
         }
 
         private static List<PodcastStatInfo> GetPodcastInfo(string url, string podcastName, DurationStyle durationStyle)
@@ -99,24 +102,28 @@ namespace PodcastStats
                         durationEls[0];
 
 
-                    if (durationEl != null && durationEl.InnerText != "0:00" && durationEl.InnerText != "" &&
-                        durationEl.InnerText != "0")
+                    if (durationEl == null || durationEl.InnerText == "0:00" || durationEl.InnerText == "" ||
+                        durationEl.InnerText == "0")
                     {
-                        durationStr = durationEl.InnerText;
-
-                        durationStr = FormatDuration(durationStyle, durationStr);
-
-                        if (durationStr != "")
-                        {
-                            var psi = new PodcastStatInfo();
-                            psi.Duration = durationStr;
-                            psi.PublishDate = item.PublishDate.Date;
-                            psi.Title = item.Title.Text;
-                            psi.Id = item.Id;
-                            psi.Podcast = podcastName;
-                            output2.Add(psi);
-                        }
+                        continue;
                     }
+
+                    durationStr = durationEl.InnerText;
+
+                    durationStr = FormatDuration(durationStyle, durationStr);
+
+                    if (durationStr == "")
+                    {
+                        continue;
+                    }
+
+                    var psi = new PodcastStatInfo();
+                    psi.Duration = durationStr;
+                    psi.PublishDate = item.PublishDate.Date;
+                    psi.Title = item.Title.Text;
+                    psi.Id = item.Id;
+                    psi.Podcast = podcastName;
+                    output2.Add(psi);
                 }
             }
 
