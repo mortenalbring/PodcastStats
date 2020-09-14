@@ -11,14 +11,60 @@ namespace PodcastStats
         public static void Main(string[] args)
         {
             var output = GetPodcastInfo("https://feeds.99percentinvisible.org/", "99% Invisible", DurationStyle.mmss);
-            //   var output2 = GetPodcastInfo("https://www.giantbomb.com/feeds/podcast/", "Giant Bombcast", DurationStyle.secondsDuration);
+               var output2 = GetPodcastInfo("https://www.giantbomb.com/feeds/podcast/", "Giant Bombcast", DurationStyle.secondsDuration);
 
-            // foreach (var d in output)
-            // {
-            //     Console.WriteLine(d.Key.Date + ","  + d.Value);
-            // }
+               var outputs = new List<PodcastStatInfo>();
+               outputs.AddRange(output);
+               outputs.AddRange(output2);
 
-            foreach (var d in output) Console.WriteLine(d.MakeSimpleStatLine());
+               var allDates = outputs.Select(e => e.PublishDate).Distinct().ToList();
+               var podcastTypes = outputs.Select(e => e.Podcast).Distinct().ToList();
+
+               var header = "Date,";
+
+               foreach (var p in podcastTypes)
+               {
+                   header = header + p + ",";
+               }
+               
+               var dataText = new List<string>();
+               dataText.Add(header);
+               foreach (var d in allDates)
+               {
+                   var outputStr = d.ToString("yyyy/MM/dd");
+                   foreach (var p in podcastTypes)
+                   {
+                       var dateDur = "";
+                       
+                       var match = outputs.Where(e => e.PublishDate == d && e.Podcast == p).ToList();
+                       if (match.Count == 0)
+                       {
+                           dateDur = "";
+                       }
+
+                       if (match.Count == 1)
+                       {
+                           dateDur = match.First().Duration;
+                       }
+                       
+                       if (match.Count > 1)
+                       {
+                           //todo handle case where multiple podcasts added on same date
+                           dateDur = match.First().Duration;
+                       }
+
+                       outputStr = outputStr + "," + dateDur;
+                   }
+                   
+                   dataText.Add(outputStr);
+               }
+
+               foreach (var dt in dataText)
+               {
+                   Console.WriteLine(dt);
+               }
+               
+         
         }
 
         private static List<PodcastStatInfo> GetPodcastInfo(string url, string podcastName, DurationStyle durationStyle)
@@ -50,7 +96,7 @@ namespace PodcastStats
                     {
                         var psi = new PodcastStatInfo();
                         psi.Duration = durationStr;
-                        psi.PublishDate = item.PublishDate;
+                        psi.PublishDate = item.PublishDate.Date;
                         psi.Title = item.Title.Text;
                         psi.Id = item.Id;
                         psi.Podcast = podcastName;
@@ -127,7 +173,7 @@ namespace PodcastStats
         private class PodcastStatInfo
         {
             public string Id { get; set; }
-            public DateTimeOffset PublishDate { get; set; }
+            public DateTime PublishDate { get; set; }
 
             public string Duration { get; set; }
 
