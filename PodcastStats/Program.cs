@@ -39,7 +39,20 @@ namespace PodcastStats
             combinedGraph.Add(altfone);
             combinedGraph.Add(asg);
             combinedGraph.Add(bombcastaftermath);
-
+            
+            combinedGraph.IncludeTitlesInOutput = true;
+            
+            combinedGraph.IgnoreTitlesContaining.Add("GOTY");
+            combinedGraph.IgnoreTitlesContaining.Add("Game of the Year");
+            combinedGraph.IgnoreTitlesContaining.Add("Live from E3");
+            combinedGraph.IgnoreTitlesContaining.Add("Live! at E3");
+            combinedGraph.IgnoreTitlesContaining.Add("E3 2011");
+            combinedGraph.IgnoreTitlesContaining.Add("E3 2012");
+            combinedGraph.IgnoreTitlesContaining.Add("E3 2013");
+            combinedGraph.IgnoreTitlesContaining.Add("Relaunch PSA");
+            combinedGraph.IgnoreTitlesContaining.Add("Seasons greetings");
+            combinedGraph.IgnoreTitlesContaining.Add("microphone check");
+            combinedGraph.IgnoreTitlesContaining.Add("alt+f1 has moved");
 
             var data = combinedGraph.MakePlot();
 
