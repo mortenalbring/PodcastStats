@@ -3,7 +3,10 @@
 namespace PodcastStats
 {
 
-    public class PodcastStatInfoLine
+    /// <summary>
+    /// Individual podcast episode information
+    /// </summary>
+    public class PodcastEpisodeInfo
     {
         public string Id { get; set; }
         public DateTime PublishDate { get; set; }

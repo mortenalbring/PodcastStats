@@ -45,7 +45,7 @@
         <Compile Include="CombinedPodcastGraph.cs" />
         <Compile Include="DurationStyle.cs" />
         <Compile Include="PodcastStatInfo.cs" />
-        <Compile Include="PodcastStatInfoLine.cs" />
+        <Compile Include="PodcastEpisodeInfo.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>

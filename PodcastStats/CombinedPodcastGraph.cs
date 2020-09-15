@@ -5,31 +5,37 @@ namespace PodcastStats
 {
     public class CombinedPodcastGraph
     {
-        public List<PodcastStatInfo> Podcasts = new List<PodcastStatInfo>();
+        private readonly List<PodcastStatInfo> Podcasts = new List<PodcastStatInfo>();
 
         public void Add(PodcastStatInfo podcastStatInfo)
         {
-            this.Podcasts.Add(podcastStatInfo);
+            Podcasts.Add(podcastStatInfo);
         }
 
         public IEnumerable<string> MakePlot()
         {
-            var totalOutput = new List<PodcastStatInfoLine>();
-            foreach (var p in this.Podcasts)
+            var totalPodcastEpisodeInfos = new List<PodcastEpisodeInfo>();
+            foreach (var p in Podcasts)
             {
-                var podcastInfo = p.GetPodcastInfo();
-                totalOutput.AddRange(podcastInfo);
+                p.GetPodcastInfo();
+                totalPodcastEpisodeInfos.AddRange(p.PodcastStatInfoLines);
             }
 
-            var data = AggregateDataForPlot(totalOutput);
+            var data = AggregateDataForPlot(totalPodcastEpisodeInfos);
 
             return data;
         }
-        
-        private static IEnumerable<string> AggregateDataForPlot(List<PodcastStatInfoLine> outputs)
+
+        /// <summary>
+        ///     Aggregates data from all the podcasts specified and outputs data
+        ///     <remarks>This method is quite inefficient, can be improved</remarks>
+        /// </summary>
+        /// <param name="episodeInfoLines">Podcast episode info lines</param>
+        /// <returns>List of comma separated data lines</returns>
+        private static IEnumerable<string> AggregateDataForPlot(List<PodcastEpisodeInfo> episodeInfoLines)
         {
-            var allDates = outputs.Select(e => e.PublishDate).Distinct().ToList();
-            var podcastTypes = outputs.Select(e => e.Podcast).Distinct().ToList();
+            var allDates = episodeInfoLines.Select(e => e.PublishDate).Distinct().ToList();
+            var podcastTypes = episodeInfoLines.Select(e => e.Podcast).Distinct().ToList();
 
             var header = podcastTypes.Aggregate("Date,", (current, p) => current + p + ",");
 
@@ -41,7 +47,7 @@ namespace PodcastStats
                 {
                     var dateDur = "";
 
-                    var match = outputs.Where(e => e.PublishDate == d && e.Podcast == p).ToList();
+                    var match = episodeInfoLines.Where(e => e.PublishDate == d && e.Podcast == p).ToList();
                     if (match.Count == 0)
                     {
                         dateDur = "";
@@ -67,6 +73,5 @@ namespace PodcastStats
 
             return dataText;
         }
-
     }
 }

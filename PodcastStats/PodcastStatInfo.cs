@@ -8,7 +8,7 @@ namespace PodcastStats
 {
     public class PodcastStatInfo
     {
-        public List<PodcastStatInfoLine> PodcastStatInfoLines = new List<PodcastStatInfoLine>();
+        public List<PodcastEpisodeInfo> PodcastStatInfoLines = new List<PodcastEpisodeInfo>();
 
         public PodcastStatInfo(string url, string podcastName, DurationStyle durationStyle)
         {
@@ -17,11 +17,11 @@ namespace PodcastStats
             DurationStyle = durationStyle;
         }
 
-        public string PodcastName { get; }
+        private string PodcastName { get; }
 
-        public string Url { get; }
+        private string Url { get; }
 
-        public DurationStyle DurationStyle { get; }
+        private DurationStyle DurationStyle { get; }
 
 
         /// <summary>
@@ -136,9 +136,15 @@ namespace PodcastStats
             return durationStr;
         }
 
-        public List<PodcastStatInfoLine> GetPodcastInfo()
+        private bool Initialised { get; set; }
+        public void GetPodcastInfo()
         {
-            var podcastStatInfoList = new List<PodcastStatInfoLine>();
+            if (Initialised)
+            {
+                return;
+            }
+            
+            var podcastStatInfoList = new List<PodcastEpisodeInfo>();
 
             var reader = XmlReader.Create(Url);
             var feed = SyndicationFeed.Load(reader);
@@ -177,7 +183,7 @@ namespace PodcastStats
                     continue;
                 }
 
-                var psi = new PodcastStatInfoLine
+                var psi = new PodcastEpisodeInfo
                 {
                     Duration = durationStr,
                     PublishDate = item.PublishDate.Date,
@@ -190,7 +196,8 @@ namespace PodcastStats
             }
 
             PodcastStatInfoLines = podcastStatInfoList;
-            return podcastStatInfoList;
+
+            Initialised = true;
         }
     }
 }
